@@ -1,1 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Reaper Mods • License Server</title>
+    <style>
+        body { 
+            font-family: Arial; 
+            background: #0a0a0a; 
+            color: #8B5CF6; 
+            text-align: center; 
+            padding: 50px; 
+        }
+        .container { max-width: 600px; margin: 0 auto; }
+        .success { color: #10B981; font-size: 24px; margin: 20px 0; }
+        .info-box { background: #1a1a2e; padding: 20px; border-radius: 10px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧛‍♂️ Reaper Mods Server</h1>
+        <div class="success">✅ Server is ONLINE</div>
+        
+        <div class="info-box">
+            <h3>API Endpoint</h3>
+            <code id="apiUrl">Loading...</code>
+            <p><strong>Test Key:</strong> test123</p>
+            <p><strong>Any HWID</strong> will work for testing</p>
+        </div>
 
+        <div class="info-box">
+            <h3>Test API</h3>
+            <button onclick="testAPI()" style="background: #8B5CF6; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+                Test Connection
+            </button>
+            <div id="testResult"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('apiUrl').textContent = window.location.origin + '/api/license';
+        
+        async function testAPI() {
+            const result = document.getElementById('testResult');
+            result.innerHTML = 'Testing...';
+            
+            try {
+                const response = await fetch('/api/license', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_key: 'test123', hwid: 'TEST_DEVICE' })
+                });
+                
+                const data = await response.json();
+                result.innerHTML = data.status ? '✅ API Working!' : '❌ ' + data.reason;
+            } catch (error) {
+                result.innerHTML = '❌ Connection failed';
+            }
+        }
+        
+        // Auto-test on load
+        testAPI();
+    </script>
+</body>
+</html>

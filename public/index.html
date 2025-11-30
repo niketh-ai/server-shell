@@ -1,64 +1,221 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reaper Mods • License Server</title>
-    <style>
-        body { 
-            font-family: Arial; 
-            background: #0a0a0a; 
-            color: #8B5CF6; 
-            text-align: center; 
-            padding: 50px; 
-        }
-        .container { max-width: 600px; margin: 0 auto; }
-        .success { color: #10B981; font-size: 24px; margin: 20px 0; }
-        .info-box { background: #1a1a2e; padding: 20px; border-radius: 10px; margin: 20px 0; }
-    </style>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="assets/style.css" rel="stylesheet">
 </head>
 <body>
     <div class="container">
-        <h1>🧛‍♂️ Reaper Mods Server</h1>
-        <div class="success">✅ Server is ONLINE</div>
-        
-        <div class="info-box">
-            <h3>API Endpoint</h3>
-            <code id="apiUrl">Loading...</code>
-            <p><strong>Test Key:</strong> test123</p>
-            <p><strong>Any HWID</strong> will work for testing</p>
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <i class="fas fa-ghost"></i>
+            </div>
+            <h1 class="title">REAPER MODS PORTAL</h1>
+            <p class="subtitle">License Management System • Nightmare Edition</p>
         </div>
 
-        <div class="info-box">
-            <h3>Test API</h3>
-            <button onclick="testAPI()" style="background: #8B5CF6; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
-                Test Connection
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalLicenses">0</div>
+                <div class="stat-label">Total Licenses</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="activeLicenses" style="color: var(--success)">0</div>
+                <div class="stat-label">Active Licenses</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="serverStatus" style="color: var(--success)">ONLINE</div>
+                <div class="stat-label">Server Status</div>
+            </div>
+        </div>
+
+        <!-- API Information Card -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-code card-icon"></i>
+                <h3 class="card-title">API Endpoint</h3>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Server URL</label>
+                <div class="form-input" style="background: rgba(0,0,0,0.5); font-family: monospace; cursor: copy;" onclick="copyToClipboard(this)" id="apiUrl">
+                    Loading...
+                </div>
+                <small style="color: var(--text-muted);">Click to copy</small>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Test Credentials</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <label style="color: var(--text-muted); font-size: 0.9rem;">User Key</label>
+                        <div class="form-input" style="background: rgba(0,0,0,0.5); font-family: monospace;">test123</div>
+                    </div>
+                    <div>
+                        <label style="color: var(--text-muted); font-size: 0.9rem;">HWID</label>
+                        <div class="form-input" style="background: rgba(0,0,0,0.5); font-family: monospace;">ANY_HWID</div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn" onclick="testAPI()">
+                <i class="fas fa-bolt"></i> Test API Connection
             </button>
-            <div id="testResult"></div>
+            
+            <div id="testResult" class="mt-3"></div>
+        </div>
+
+        <!-- Request Example Card -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-terminal card-icon"></i>
+                <h3 class="card-title">API Request Example</h3>
+            </div>
+            
+            <pre><code>{
+  "user_key": "test123",
+  "hwid": "DEVICE_HWID_HERE"
+}</code></pre>
+
+            <div class="form-row mt-3">
+                <div>
+                    <label class="form-label">Test User Key</label>
+                    <input type="text" class="form-input" id="testKey" value="test123">
+                </div>
+                <div>
+                    <label class="form-label">Test HWID</label>
+                    <input type="text" class="form-input" id="testHwid" value="TEST_DEVICE_001">
+                </div>
+            </div>
+            
+            <button class="btn btn-secondary" onclick="manualTest()">
+                <i class="fas fa-play"></i> Run Manual Test
+            </button>
+        </div>
+
+        <!-- Response Example Card -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-server card-icon"></i>
+                <h3 class="card-title">API Response</h3>
+            </div>
+            
+            <div id="responseExample">
+                <pre><code>{
+  "status": true,
+  "data": {
+    "token": "eyJ1c2VyX2t...",
+    "EXP": "2024-12-31",
+    "mod_status": "active",
+    "rng": 1690000000
+  }
+}</code></pre>
+            </div>
         </div>
     </div>
 
     <script>
+        // Display API URL
         document.getElementById('apiUrl').textContent = window.location.origin + '/api/license';
         
+        // Update stats
+        document.getElementById('serverStatus').textContent = 'ONLINE';
+        document.getElementById('totalLicenses').textContent = '∞';
+        document.getElementById('activeLicenses').textContent = '∞';
+
         async function testAPI() {
-            const result = document.getElementById('testResult');
-            result.innerHTML = 'Testing...';
+            const resultDiv = document.getElementById('testResult');
+            resultDiv.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin"></i> Testing API connection...</div>';
             
             try {
                 const response = await fetch('/api/license', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_key: 'test123', hwid: 'TEST_DEVICE' })
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        user_key: 'test123',
+                        hwid: 'TEST_DEVICE_001'
+                    })
                 });
                 
                 const data = await response.json();
-                result.innerHTML = data.status ? '✅ API Working!' : '❌ ' + data.reason;
+                
+                if (data.status) {
+                    resultDiv.innerHTML = `<div class="alert alert-success">
+                        <i class="fas fa-check-circle"></i> 
+                        <strong>API Test Successful!</strong><br>
+                        Token: ${data.data.token.substring(0, 20)}...
+                    </div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="alert alert-error">
+                        <i class="fas fa-times-circle"></i> 
+                        <strong>API Test Failed:</strong> ${data.reason}
+                    </div>`;
+                }
             } catch (error) {
-                result.innerHTML = '❌ Connection failed';
+                resultDiv.innerHTML = `<div class="alert alert-error">
+                    <i class="fas fa-times-circle"></i> 
+                    <strong>Connection Error:</strong> ${error.message}
+                </div>`;
             }
         }
-        
-        // Auto-test on load
-        testAPI();
+
+        async function manualTest() {
+            const userKey = document.getElementById('testKey').value;
+            const hwid = document.getElementById('testHwid').value;
+            const resultDiv = document.getElementById('testResult');
+            
+            resultDiv.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin"></i> Sending request...</div>';
+            
+            try {
+                const response = await fetch('/api/license', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ user_key: userKey, hwid: hwid })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status) {
+                    resultDiv.innerHTML = `<div class="alert alert-success">
+                        <i class="fas fa-check-circle"></i> 
+                        <strong>Success!</strong> License valid until ${data.data.EXP}
+                    </div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="alert alert-error">
+                        <i class="fas fa-times-circle"></i> 
+                        <strong>Failed:</strong> ${data.reason}
+                    </div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="alert alert-error">
+                    <i class="fas fa-times-circle"></i> 
+                    <strong>Error:</strong> ${error.message}
+                </div>`;
+            }
+        }
+
+        function copyToClipboard(element) {
+            const text = element.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const original = element.textContent;
+                element.textContent = '✓ Copied!';
+                element.style.color = 'var(--success)';
+                setTimeout(() => {
+                    element.textContent = original;
+                    element.style.color = '';
+                }, 2000);
+            });
+        }
+
+        // Auto-test on page load
+        setTimeout(testAPI, 1000);
     </script>
 </body>
 </html>
